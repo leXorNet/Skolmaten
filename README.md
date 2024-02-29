@@ -36,7 +36,7 @@ Script to fetch the Swedish school meal menu and display it on 2.9" EPaper tags.
    <img width="481" src="https://github.com/leXorNet/Skolmaten/assets/951893/2c70a3da-7eb7-4a14-a1d3-8afe102d1224">
 
 7. Get the id part from the copied link and add it to the following format: <br>
-    > https://drive.google.com/file/d/[fileid]/view?usp=drive_link
+    > https://drive.google.com/uc?export=download&id=[fileid]
 
 8. In the OpenEPaperLink dashboard. Set your tag content type to "Json template" and paste the reformatted link. <br>
     ![Json template](https://github.com/leXorNet/Skolmaten/assets/951893/43bb2366-ecf0-403a-b854-23c11b19d6af)
