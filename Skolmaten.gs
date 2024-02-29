@@ -1,24 +1,24 @@
 function updateSkolmaten() {
   const school = "mellanhedsskolan";
-  const url = "https://skolmaten.se/" + school + "/rss/days/?offset=-0&limit=4"; // Four days to include Mon on a Fri
+  const url = "https://skolmaten.se/" + school + "/rss/days/?offset=0&limit=4"; // Four days to include Mon on a Fri
   const items = fetchData(url);
   const dateToday = new Date();
-  const dateTomorrow = new Date();
-  dateTomorrow.setDate(dateToday.getDate() + 1)
-
   var itemToday = null;
   var itemNext = null;
+
   items.forEach(item => {
     if(itemNext === null)
     {
-        let date = new Date(item.getChild('pubDate').getText());
-        if(date.getDate() === dateToday.getDate()) { itemToday = item; }
-        else if(date.getDate() > dateToday.getDate()) { itemNext = item; }
+        const date = new Date(item.getChild('pubDate').getText());
+        const diff = getDateDiff(dateToday, date);
+
+        if(diff == 0) { itemToday = item; }
+        else if(diff > 0) { itemNext = item; }
     }
   });
 
   saveToJson("skolmaten_today.json", generateSingle(itemToday, dateToday));
-  saveToJson("skolmaten_tomorrow.json", generateSingle(itemNext, dateTomorrow));
+  saveToJson("skolmaten_tomorrow.json", generateSingle(itemNext, getDateTomorrow()));
 }
 
 function generateSingle(item, dateTarget) {  
@@ -34,11 +34,9 @@ function generateSingle(item, dateTarget) {
     choices = item.getChild('description').getText().split('<br/>');
   }
 
-  const today = new Date();
-  const tomorrow = new Date();
-  tomorrow.setDate(today.getDate() + 1)
-  if(date.getDate() === today.getDate()) { title = "Idag"; }
-  else if(date.getDate() === tomorrow.getDate()) { title = "Imorgon"; } 
+  const diff = getDateDiff(new Date(), date);
+  if(diff == 0) { title = "Idag"; }
+  else if(diff == 1) { title = "Imorgon"; } 
 
   drawLayout(output, title, date, choices);
 
@@ -84,6 +82,20 @@ function createItem(type, data) {
 function wrapString(str, length) {
   const wrappedString = str.replace(new RegExp(`(?![^\\n]{1,${length}}$)([^\\n]{1,${length}})\\s`, 'g'), '$1\n');
   return wrappedString.split('\n');
+}
+
+function getDateTomorrow() {
+  const date = new Date();
+  date.setDate(date.getDate() + 1)
+  return date;
+}
+
+function getDateDiff(date1, date2) {
+  // Compare dates ignoring time
+  date1.setHours(0, 0, 0, 0);
+  date2.setHours(0, 0, 0, 0);
+  const daysDiff = Math.ceil((date2 - date1) / (1000 * 60 * 60 * 24)); 
+  return daysDiff;
 }
 
 function getWeek(date) {
