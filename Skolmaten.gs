@@ -1,51 +1,82 @@
 function updateSkolmaten() {
-  const school = "mellanhedsskolan";
-  const url = "https://skolmaten.se/" + school + "/rss/days/?offset=0&limit=4"; // Four days to include Mon on a Fri
-  const items = fetchData(url);
-  const dateToday = new Date();
-  var itemToday = null;
-  var itemNext = null;
-
-  items.forEach(item => {
-    if(itemNext === null)
-    {
-        const date = new Date(item.getChild('pubDate').getText());
-        const diff = getDateDiff(dateToday, date);
-
-        if(diff == 0) { itemToday = item; }
-        else if(diff > 0) { itemNext = item; }
-    }
-  });
-
-  saveToJson("skolmaten_today.json", generateSingle(itemToday, dateToday));
-  saveToJson("skolmaten_tomorrow.json", generateSingle(itemNext, getDateTomorrow()));
+  const schoolId = "5c04b397-ca89-433b-a596-231c7a5ef1a3";
+  const baseUrl = "https://skolmaten.se/api/4/menu/";
+  const days = fetchDays(baseUrl, schoolId, 2);
+  
+  saveToJson("skolmaten_today.json", generateSingle(new Date(), days[0]));
+  saveToJson("skolmaten_tomorrow.json", generateSingle(getDateTomorrow(), days[1]));
 }
 
-function generateSingle(item, dateTarget) {  
+function fetchDays(baseUrl, schoolId, days) {
+  var headers = {
+    //"Authorization": "<API key>",
+    "Referer": "https://skolmaten.se/",
+  };
+
+  var options = {
+    "method": "GET",
+    "headers": headers,
+  };
+
+  const dateToday = new Date();
+  let year = dateToday.getFullYear();
+  let week = getWeek(dateToday);
+  let day = getDay(dateToday);
+
+  let weekDays = null;
   let output = [];
-  let title = "";
-  let date = dateTarget;
-  let choices = ["Ingen skolmat serveras"];
 
-  if(item !== null)
-  {
-    title = item.getChild('title').getText().split(' ')[0];
-    date = new Date(item.getChild('pubDate').getText());
-    choices = item.getChild('description').getText().split('<br/>');
+  for (let i = 0; i < days; i++) {
+    if (weekDays == null) {
+      // Fetch week
+      const response = UrlFetchApp.fetch(baseUrl + schoolId + "?year=" + year + "&week=" + week, options);
+      const json = JSON.parse(response.getContentText());
+      weekDays = json["WeekState"]["Days"];
+    }
+
+    // Add day
+    //Logger.log("Adding day " + day + " from week: " + week);
+    output.push(weekDays[day])
+
+    // Next school day
+    day++;
+    if(day >= 5) {
+      // Go to next week
+      week++;
+      day = 0;
+      weekDays = null;
+
+      if(week > 52) {
+        // Go to next year
+        week = 1;
+        year++;
+      }
+    }
   }
-
-  const diff = getDateDiff(new Date(), date);
-  if(diff == 0) { title = "Idag"; }
-  else if(diff == 1) { title = "Imorgon"; } 
-
-  drawLayout(output, title, date, choices);
 
   return output;
 }
 
-function drawLayout(output, title, date, choices) {
+function generateSingle(targetDate, day) {  
+  let output = [];
+
+  if (day) {
+    let choices = [day["Meals"][0]["name"]];
+    if(day["Meals"].length > 1)
+      choices.push(day["Meals"][1]["name"]);
+
+    drawLayout(output, new Date(day["date"]), choices);
+  }
+  else {
+    drawLayout(output, targetDate, ["Ingen skolmat serveras"]);
+  }
+
+  return output;
+}
+
+function drawLayout(output, date, choices) {
   let height = 0; // Screen size: 296x128
-  output.push(createItem('text', [148, 5, title, "calibrib30", 2, 1]));
+  output.push(createItem('text', [148, 5, getDayName(date), "calibrib30", 2, 1]));
   output.push(createItem('text', [291, 5, "v" + getWeek(date), "calibrib16", 1, 2]));
   height += 40;
   
@@ -98,24 +129,42 @@ function getDateDiff(date1, date2) {
   return daysDiff;
 }
 
-function getWeek(date) {
-  date.setHours(0, 0, 0, 0);
-  date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); // Thursday in current week decides the year.
-  var week1 = new Date(date.getFullYear(), 0, 4);             // January 4 is always in week 1.
-
-  // Adjust to Thursday in week 1 and count number of weeks from date to week1.
-  return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000
-                        - 3 + (week1.getDay() + 6) % 7) / 7);
+function getDay(date) {
+  // Get day of week staring Monday
+  return (date.getDay() + 6) % 7;
 }
 
-function fetchData(url) {
-  let txt = UrlFetchApp.fetch(url).getContentText();
-  let document = XmlService.parse(txt);
-  let root = document.getRootElement();
-  let channel = root.getChild('channel');
-  let items = channel.getChildren('item');
+function getDayName(date) {
+    const diff = getDateDiff(new Date(), date);
 
-  return items;
+    if(diff == 0)
+      return "Idag";
+    else if(diff == 1)
+      return "Imorgon";
+    else {
+      switch(getDay(date)) {
+        case 0: return "Måndag";
+        case 1: return "Tisdag";
+        case 2: return "Onsdag";
+        case 3: return "Torsdag";
+        case 4: return "Fredag";
+        case 5: return "Lördag";
+        case 6: return "Söndag";
+      }
+    }
+
+    return "???"
+}
+
+function getWeek(date) {
+  let d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 3 - getDay(d));       // Thursday in current week decides the year.
+  var week1 = new Date(d.getFullYear(), 0, 4);  // January 4 is always in week 1.
+
+  // Adjust to Thursday in week 1 and count number of weeks from date to week1.
+  return 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000
+                        - 3 + getDay(week1)) / 7);
 }
 
 function saveToJson(filename, obj) {

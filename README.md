@@ -4,7 +4,7 @@ Script to fetch the Swedish school meal menu and display it on 2.9" EPaper tags.
 
 
 ## Features
-* Uses the RSS-feed of your chosen school to fetch the current menu every night.
+* Uses the Skolmaten.se API to fetch current menus of your chosen school nightly.
 * Generates two json files formatted for 2.9" displays;
   - One with the menu of today.
   - One with the menu of the next day (if on a weekend, the Monday menu will be displayed).
@@ -23,7 +23,7 @@ Script to fetch the Swedish school meal menu and display it on 2.9" EPaper tags.
 2. Paste the code from Skolmaten.gs into the newly created script. <br>
    <img width="500" src="https://github.com/leXorNet/Skolmaten/assets/951893/e0310fe2-b18d-4371-b24d-09fa0441673b">
 
-3. Change the top line to the name of your school. Find the correct name by [browsing to the school](https://skolmaten.se) here <br>
+3. Change the top line to the ID of your school. Find the correct ID by [browsing to the school](https://skolmaten.se) here <br>
    
 4. Select Triggers from the left side menu. Add a trigger to run "updateSkolmaten" nightly.
    <img width="500" src="https://github.com/leXorNet/Skolmaten/assets/951893/e8c8d339-20fa-48fe-b66b-61afbb33dc9d">
