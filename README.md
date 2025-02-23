@@ -21,9 +21,9 @@ Script to fetch the Swedish school meal menu and display it on 2.9" EPaper tags.
     <img width="500" src="https://github.com/leXorNet/Skolmaten/assets/951893/57a1f0e3-eb6a-4df8-bebe-6c04fc1b422f">
     
 2. Paste the code from Skolmaten.gs into the newly created script. <br>
-   <img width="500" src="https://github.com/leXorNet/Skolmaten/assets/951893/e0310fe2-b18d-4371-b24d-09fa0441673b">
+   <img width="500" src="https://github.com/user-attachments/assets/f48de190-b731-4094-8486-10d65ffff450">
 
-3. Change the top line to the ID of your school. Find the correct ID by [browsing to the school](https://skolmaten.se) here <br>
+3. Set schoolId to the ID of your school. Find the correct ID by [browsing to your school](https://skolmaten.se) and copy the ID from the url. <br>
    
 4. Select Triggers from the left side menu. Add a trigger to run "updateSkolmaten" nightly.
    <img width="500" src="https://github.com/leXorNet/Skolmaten/assets/951893/e8c8d339-20fa-48fe-b66b-61afbb33dc9d">
