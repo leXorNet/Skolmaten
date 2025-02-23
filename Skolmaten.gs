@@ -31,7 +31,11 @@ function fetchDays(baseUrl, schoolId, days) {
       // Fetch week
       const response = UrlFetchApp.fetch(baseUrl + schoolId + "?year=" + year + "&week=" + week, options);
       const json = JSON.parse(response.getContentText());
-      weekDays = json["WeekState"]["Days"];
+      if(json["WeekState"]) {
+        weekDays = json["WeekState"]["Days"];
+      } else {
+        weekDays = [];
+      }
     }
 
     // Add day
@@ -153,7 +157,7 @@ function getDayName(date) {
       }
     }
 
-    return "???"
+    return "???";
 }
 
 function getWeek(date) {
